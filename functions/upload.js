@@ -2,21 +2,9 @@
 
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-//const sns = new AWS.SNS({apiVersion: '2010-03-31'});
 const uuidv4 = require('uuid/v4');
 const snsWrapper = require('lib/snsWrapper');
-
-/**
- * map content types to the filter topic names
- * @type {{image/jpeg: *, image/png: *, image/gif: *}}
- */
-const contentTypeTopics = {
-    'image/jpeg': process.env.IMAGE_FILTER_TOPIC,
-    'image/png': process.env.IMAGE_FILTER_TOPIC,
-    'image/gif': process.env.IMAGE_FILTER_TOPIC,
-    'text/plain': process.env.TEXT_FILTER_TOPIC,
-    'text/markdown': process.env.MD_FILTER_TOPIC
-};
+const contentTypeHandler = require('lib/contentTypeHandler');
 
 /**
  * Handle S3 object events
@@ -31,61 +19,37 @@ module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
 
-    var size = event.Records[0].s3.object.size;
+    const s3Event = event.Records[0].s3;
 
-    // if size is 0 this is a 'directory' object - ignore this event
-    if (size == 0) {
+    // if size is 0 this is a 'directory' object - ignore these event
+    if (s3Event.object.size == 0) {
         return callback(null, {});
     }
 
     var params = {
-        Bucket: event.Records[0].s3.bucket.name,
-        Key: event.Records[0].s3.object.key
+        Bucket: s3Event.bucket.name,
+        Key: s3Event.object.key
     };
 
-    var object = s3.headObject(params, function(err, response) {
+    var object = s3.headObject(params, (err, response) => {
 
         if (err) {
             console.error(err);
             return callback(null, {});
         }
 
-        // test response['ContentType']
-        console.log(response);
-
-        var topic = contentTypeTopics[response['ContentType']];
+        var topic = contentTypeHandler.selectTopic(response['ContentType']);
 
         if (topic) {
-
             snsWrapper.publish(
                 'object.created',
-                {event: event.Records[0].s3, uid: uuidv4()},
+                {
+                    event: s3Event,
+                    uid: uuidv4()
+                },
                 topic,
                 callback
             );
-
-/*            // post event to the topic
-            var message = {
-                Subject: 'object.created',
-                Message: JSON.stringify(
-                    {
-                        event: event.Records[0].s3,
-                        uid: uuidv4()
-                    }
-                ),
-                TopicArn: topic
-            };
-
-            sns.publish(message, function(err, response) {
-               if (err) {
-                   console.error(err);
-               } else {
-                   console.log('Sent: ' + message);
-               }
-                return callback(null, {});
-
-            });*/
-
         } else {
             console.err('Unhandled content type: ' + response['ContentType']);
             return callback(null, {});

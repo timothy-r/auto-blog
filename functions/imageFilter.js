@@ -2,8 +2,6 @@
 
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-//const sns = new AWS.SNS({apiVersion: '2010-03-31'});
-//const uuidv4 = require('uuid/v4');
 
 const snsWrapper = require('lib/snsWrapper');
 
@@ -44,31 +42,6 @@ module.exports.handler = (event, context, callback) => {
                 process.env.IMAGE_PAGE_TOPIC,
                 callback
             );
-
-            /*
-            // post event to the topic
-            var message = {
-                Subject: 'image.copied',
-                Message: JSON.stringify({
-                    bucket: process.env.WEB_BUCKET,
-                    key: newName,
-                    uid: incomingMessage.uid
-                }),
-                TopicArn: process.env.IMAGE_PAGE_TOPIC
-            };
-
-            sns.publish(message, function(err, response) {
-                if (err) {
-                    console.error(err);
-                } else {
-                    console.log('Sent: ' + JSON.stringify(message));
-                }
-                return callback(null, {});
-
-            });
-            */
         }
-
     });
-
 };

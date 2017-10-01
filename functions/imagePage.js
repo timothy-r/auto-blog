@@ -17,7 +17,6 @@ module.exports.handler = (event, context, callback) => {
     console.log(JSON.stringify(event));
 
     var incomingMessage = JSON.parse(event.Records[0].Sns.Message);
-
     var html = '<img src="/' + incomingMessage.key +  '" />';
 
     snsWrapper.publish(
@@ -30,27 +29,4 @@ module.exports.handler = (event, context, callback) => {
         process.env.RENDER_TOPIC,
         callback
     );
-
-
-/*    // post event to the topic
-    var message = {
-        Subject: 'image.html.generated',
-        Message: JSON.stringify({
-            html: html,
-            type: 'page',
-            uid: incomingMessage.uid
-        }),
-        TopicArn: process.env.RENDER_TOPIC
-    };
-
-    sns.publish(message, function(err, response) {
-        if (err) {
-            console.error(err);
-        } else {
-            console.log('Sent: ' + JSON.stringify(message));
-        }
-        return callback(null, {});
-
-    });*/
-
 };
