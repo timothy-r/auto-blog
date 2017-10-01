@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/timothy-r/auto-blog#readme",
   "dependencies": {
+    "marked": "^0.3.6",
     "pug": "^2.0.0-rc.4"
   }
 }
