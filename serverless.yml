@@ -4,8 +4,8 @@ service: auto-blog
 custom:
   stage: ${opt:stage, self:provider.stage}
   region: ${opt:region, self:provider.region}
-  uploadBucket: ${self:service}_${self:custom.stage}_blog_objects
-  webBucket: ${self:service}_${self:custom.stage}_blog_pages
+  uploadBucket: tjr.${self:service}.${self:custom.stage}.blog-upload-objects
+  webBucket: www.tjr.${self:service}.${self:custom.stage}.blog-pages
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -43,15 +43,11 @@ functions:
       - s3: ${self:custom.uploadBucket}
 
 
-# provision the S3 buckets
+# provision the S3 bucket
 resources:
    Resources:
-     NewResource:
-       Type: AWS::S3::Bucket
-       Properties:
-         uploadBucket: ${self:custom.uploadBucket}
 
-     NewResource:
+     WebBucket:
        Type: AWS::S3::Bucket
        Properties:
-         webBucket: ${self:custom.webBucket}
+         BucketName: ${self:custom.webBucket}

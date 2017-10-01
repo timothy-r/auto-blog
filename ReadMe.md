@@ -1,1 +1,1 @@
-# blog type pages generated from tagged S3 objects
+# web pages generated from tagged S3 objects
