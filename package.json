@@ -1,0 +1,22 @@
+{
+  "name": "auto-blog",
+  "version": "1.0.0",
+  "description": "auto-generates pages",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/timothy-r/auto-blog.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/timothy-r/auto-blog/issues"
+  },
+  "homepage": "https://github.com/timothy-r/auto-blog#readme",
+  "dependencies": {
+    "pug": "^2.0.0-rc.4"
+  }
+}

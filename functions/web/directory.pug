@@ -1,0 +1,13 @@
+doctype html
+html(lang='en')
+  head
+    title #{pageTitle}
+    link(rel='stylesheet', href='/styles/bootstrap.min.css')
+    link(rel='stylesheet', href='/styles/bootstrap-theme.min.css')
+    script(type='javascript', src='/js/bootstrap.min.js')
+  body
+    p
+      ul
+        each item in navItems
+          li
+            a(href='/' + item.directory + '/' + item.page + '.html')=item

@@ -5,7 +5,17 @@ custom:
   stage: ${opt:stage, self:provider.stage}
   region: ${opt:region, self:provider.region}
   uploadBucket: tjr.${self:service}.${self:custom.stage}.blog-upload-objects
-  webBucket: www.tjr.${self:service}.${self:custom.stage}.blog-pages
+  webBucket: www.trodger.com
+
+  imageFilterTopic: ${self:service}-${self:custom.stage}-image-filter
+  mdFilterTopic: ${self:service}-${self:custom.stage}-md-filter
+  textFilterTopic: ${self:service}-${self:custom.stage}-text-filter
+
+  imagePageTopic: ${self:service}-${self:custom.stage}-image-page
+  htmlPageTopic: ${self:service}-${self:custom.stage}-html-page
+  indexPageTopic: ${self:service}-${self:custom.stage}-index-page
+  directoryPageTopic: ${self:service}-${self:custom.stage}-directory-page
+
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -24,6 +34,9 @@ provider:
     UPLOAD_BUCKET: ${self:custom.uploadBucket}
     WEB_BUCKET: ${self:custom.webBucket}
 
+    IMAGE_FILTER_TOPIC: ${self:custom.imageFilterTopic}
+    IMAGE_PAGE_TOPIC: ${self:custom.imagePageTopic}
+
   stage: dev
   region: eu-west-2
 
@@ -35,19 +48,42 @@ package:
     - node_modules/**
     - tests/**
     - README.md
+    - web/**
 
 functions:
-  uploadObjectEvent:
-    handler: handler.uploadObjectHandler
+  upload:
+    handler: functions/upload.handler
     events:
-      - s3: ${self:custom.uploadBucket}
+      - s3:
+        bucket: ${self:custom.uploadBucket}
+        event: s3:ObjectCreated:*
 
+  imageFilter:
+    handler: functions/imageFilter.handler
+    events:
+      - sns:
+        topicName: ${self:custom.imageFilterTopic}
 
-# provision the S3 bucket
-resources:
-   Resources:
+  imagePage:
+    handler: functions/imagePage.handler
+    events:
+      - sns:
+        topicName: ${self:custom.imagePageTopic}
 
-     WebBucket:
-       Type: AWS::S3::Bucket
-       Properties:
-         BucketName: ${self:custom.webBucket}
+  mdFilter:
+    handler: functions/mdFilter.handler
+    events:
+      - sns:
+        topicName: ${self:custom.mdFilterTopic}
+
+  textFilter:
+    handler: functions/textFilter.handler
+    events:
+      - sns:
+        topicName: ${self:custom.textFilterTopic}
+
+  htmlPage:
+    handler: functions/htmlPage.handler
+    events:
+      - sns:
+        topicName: ${self:custom.imagePageTopic}
