@@ -1,7 +1,6 @@
 'use strict';
 
 var AWS = require('aws-sdk');
-var s3 = new AWS.S3({apiVersion: '2006-03-01'});
 var sns = new AWS.SNS({apiVersion: '2010-03-31'});
 
 /**
@@ -19,12 +18,12 @@ module.exports.handler = (event, context, callback) => {
 
     var html = '<img src="/' + incomingMessage.Key +  '" />';
 
-    // "Message": "{\"Bucket\":\"www.trodger.com\",\"Key\":\"images/4346e28f-a2d4-463a-8bf5-f29a49875948.jpg\"}",
-
     // post event to the topic
     var message = {
+        Subject: 'image.html.generated',
         Message: JSON.stringify({
-            html: html
+            html: html,
+            type: 'page'
         }),
         TopicArn: process.env.RENDER_TOPIC
     };

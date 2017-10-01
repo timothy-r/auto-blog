@@ -15,7 +15,6 @@ var marked = require('marked');
 module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
-    return callback(null, {});
 
     var incomingMessage = JSON.parse(event.Records[0].Sns.Message);
 
@@ -31,13 +30,32 @@ module.exports.handler = (event, context, callback) => {
             return callback(null, {});
         } else {
             console.log(response);
+            // render into html
+            var body = response.Body + '';
+            console.log(body)
+            var html = marked(body);
+
+            // post event to process.env.RENDER_TOPIC
+            var message = {
+                Subject: 'md.html.generated',
+                Message: JSON.stringify({
+                    html: html,
+                    type: 'page'
+                }),
+                TopicArn: process.env.RENDER_TOPIC
+            };
+
+            sns.publish(message, function(err, response) {
+                if (err) {
+                    console.error(err);
+                } else {
+                    console.log('Sent: ' + JSON.stringify(message));
+                }
+                return callback(null, {});
+
+            });
+
+            return callback(null, {});
         }
-
-        return callback(null, {});
-
-        // render into html
-        // post event to process.env.RENDER_TOPIC
     });
-
-
 };

@@ -37,6 +37,7 @@ module.exports.handler = (event, context, callback) => {
         } else {
             // post event to the topic
             var message = {
+                Subject: 'image.copied',
                 Message: JSON.stringify({
                     Bucket: process.env.WEB_BUCKET,
                     Key: newName

@@ -11,7 +11,9 @@ var sns = new AWS.SNS({apiVersion: '2010-03-31'});
 const contentTypeTopics = {
     'image/jpeg': process.env.IMAGE_FILTER_TOPIC,
     'image/png': process.env.IMAGE_FILTER_TOPIC,
-    'image/gif': process.env.IMAGE_FILTER_TOPIC
+    'image/gif': process.env.IMAGE_FILTER_TOPIC,
+    'text/plain': process.env.TEXT_FILTER_TOPIC,
+    'text/markdown': process.env.MD_FILTER_TOPIC
 };
 
 /**
@@ -55,8 +57,9 @@ module.exports.handler = (event, context, callback) => {
 
             // post event to the topic
             var message = {
+                Subject: 'object.created',
                 Message: JSON.stringify(event.Records[0].s3),
-                TopicArn: process.env.IMAGE_FILTER_TOPIC
+                TopicArn: topic
             };
 
             sns.publish(message, function(err, response) {
