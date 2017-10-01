@@ -59,6 +59,9 @@ provider:
   stage: dev
   region: eu-west-2
 
+plugins:
+  - serverless-plugin-webpack
+  
 package:
   exclude:
     - .idea/**
