@@ -1,0 +1,57 @@
+#
+service: auto-blog
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  region: ${opt:region, self:provider.region}
+  uploadBucket: ${self:service}_${self:custom.stage}_blog_objects
+  webBucket: ${self:service}_${self:custom.stage}_blog_pages
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+provider:
+  name: aws
+  runtime: nodejs6.10
+  memorySize: 128
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "s3:*"
+      Resource: "*"
+
+  environment:
+    UPLOAD_BUCKET: ${self:custom.uploadBucket}
+    WEB_BUCKET: ${self:custom.webBucket}
+
+  stage: dev
+  region: eu-west-2
+
+package:
+  exclude:
+    - .idea/**
+    - .npmignore
+    - package.json
+    - node_modules/**
+    - tests/**
+    - README.md
+
+functions:
+  uploadObjectEvent:
+    handler: handler.uploadObjectHandler
+    events:
+      - s3: ${self:custom.uploadBucket}
+
+
+# provision the S3 buckets
+resources:
+   Resources:
+     NewResource:
+       Type: AWS::S3::Bucket
+       Properties:
+         uploadBucket: ${self:custom.uploadBucket}
+
+     NewResource:
+       Type: AWS::S3::Bucket
+       Properties:
+         webBucket: ${self:custom.webBucket}
