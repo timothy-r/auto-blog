@@ -1,8 +1,10 @@
 'use strict';
 
-var AWS = require('aws-sdk');
-var s3 = new AWS.S3({apiVersion: '2006-03-01'});
-var sns = new AWS.SNS({apiVersion: '2010-03-31'});
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+//const sns = new AWS.SNS({apiVersion: '2010-03-31'});
+const uuidv4 = require('uuid/v4');
+const snsWrapper = require('lib/snsWrapper');
 
 /**
  * map content types to the filter topic names
@@ -55,10 +57,22 @@ module.exports.handler = (event, context, callback) => {
 
         if (topic) {
 
-            // post event to the topic
+            snsWrapper.publish(
+                'object.created',
+                {event: event.Records[0].s3, uid: uuidv4()},
+                topic,
+                callback
+            );
+
+/*            // post event to the topic
             var message = {
                 Subject: 'object.created',
-                Message: JSON.stringify(event.Records[0].s3),
+                Message: JSON.stringify(
+                    {
+                        event: event.Records[0].s3,
+                        uid: uuidv4()
+                    }
+                ),
                 TopicArn: topic
             };
 
@@ -70,10 +84,10 @@ module.exports.handler = (event, context, callback) => {
                }
                 return callback(null, {});
 
-            });
+            });*/
 
         } else {
-            console.err('Wrong content type: ' + response['ContentType']);
+            console.err('Unhandled content type: ' + response['ContentType']);
             return callback(null, {});
         }
 

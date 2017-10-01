@@ -1,7 +1,9 @@
 'use strict';
 
-var AWS = require('aws-sdk');
-var sns = new AWS.SNS({apiVersion: '2010-03-31'});
+const AWS = require('aws-sdk');
+//var sns = new AWS.SNS({apiVersion: '2010-03-31'});
+const snsWrapper = require('lib/snsWrapper');
+
 
 /**
  * create html to insert for a page with a single image file
@@ -16,14 +18,27 @@ module.exports.handler = (event, context, callback) => {
 
     var incomingMessage = JSON.parse(event.Records[0].Sns.Message);
 
-    var html = '<img src="/' + incomingMessage.Key +  '" />';
+    var html = '<img src="/' + incomingMessage.key +  '" />';
 
-    // post event to the topic
+    snsWrapper.publish(
+        'image.html.generated',
+        {
+            html: html,
+            type: 'page',
+            uid: incomingMessage.uid
+        },
+        process.env.RENDER_TOPIC,
+        callback
+    );
+
+
+/*    // post event to the topic
     var message = {
         Subject: 'image.html.generated',
         Message: JSON.stringify({
             html: html,
-            type: 'page'
+            type: 'page',
+            uid: incomingMessage.uid
         }),
         TopicArn: process.env.RENDER_TOPIC
     };
@@ -36,6 +51,6 @@ module.exports.handler = (event, context, callback) => {
         }
         return callback(null, {});
 
-    });
+    });*/
 
 };

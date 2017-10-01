@@ -2,9 +2,7 @@
 
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-const sns = new AWS.SNS({apiVersion: '2010-03-31'});
 const pug = require('pug');
-const uuidv4 = require('uuid/v4');
 
 /**
  * render a full html page with a html snippet
@@ -19,8 +17,21 @@ module.exports.handler = (event, context, callback) => {
 
     var incomingMessage = JSON.parse(event.Records[0].Sns.Message);
 
+    var template = '';
+
     // Compile the source code
-    var compiledFunction = pug.compileFile(__dirname + '/web/page.pug');
+    switch (incomingMessage.type) {
+        case 'page':
+            template = __dirname + '/web/page.pug';
+            break;
+        case 'index':
+        case 'directory':
+        default:
+            throw "Error unknown type: " + incomingMessage.type;
+            break;
+    }
+
+    var compiledFunction = pug.compileFile(template);
 
     /**
      * need to provide a page title - S3 object tag name?
@@ -30,9 +41,9 @@ module.exports.handler = (event, context, callback) => {
         content: incomingMessage.html
     });
 
-    var newName = "pages/" + uuidv4() + '.html';
-    // upload to S3 object
+    var newName = "pages/" + incomingMessage.uid + '.html';
 
+    // upload to S3 object
     var params = {
         Body: html,
         Bucket: process.env.WEB_BUCKET,
@@ -47,7 +58,6 @@ module.exports.handler = (event, context, callback) => {
             console.error(err);
         } else {
             console.log('Sent: ' + JSON.stringify(params));
-            // publish an event for the navigation generation
 
         }
         return callback(null, {});
