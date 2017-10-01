@@ -4,7 +4,7 @@ service: auto-blog
 custom:
   stage: ${opt:stage, self:provider.stage}
   region: ${opt:region, self:provider.region}
-  uploadBucket: tjr.${self:service}.${self:custom.stage}.blog-upload-objects
+  uploadBucket: tjr.${self:service}.${self:custom.stage}.upload
   webBucket: www.trodger.com
 
   imageFilterTopic: ${self:service}-${self:custom.stage}-image-filter
@@ -12,9 +12,10 @@ custom:
   textFilterTopic: ${self:service}-${self:custom.stage}-text-filter
 
   imagePageTopic: ${self:service}-${self:custom.stage}-image-page
-  htmlPageTopic: ${self:service}-${self:custom.stage}-html-page
   indexPageTopic: ${self:service}-${self:custom.stage}-index-page
   directoryPageTopic: ${self:service}-${self:custom.stage}-directory-page
+
+  renderTopic: ${self:service}-${self:custom.stage}-render
 
 
 # You can pin your service to only deploy with a specific Serverless version
@@ -30,18 +31,30 @@ provider:
         - "s3:*"
       Resource: "*"
 
+    - Effect: Allow
+      Action:
+        - SNS:Publish
+      Resource:
+        - { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.textFilterTopic}" ] ]  }
+        - { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.imageFilterTopic}" ] ]  }
+        - { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.mdFilterTopic}" ] ]  }
+        - { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.imagePageTopic}" ] ]  }
+        - { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.indexPageTopic}" ] ]  }
+        - { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.directoryPageTopic}" ] ]  }
+        - { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.renderTopic}" ] ]  }
+
   environment:
     UPLOAD_BUCKET: ${self:custom.uploadBucket}
     WEB_BUCKET: ${self:custom.webBucket}
 
-    IMAGE_FILTER_TOPIC: ${self:custom.imageFilterTopic}
-    MD_FILTER_TOPIC: ${self:custom.mdFilterTopic}
-    TEXT_FILTER_TOPIC: ${self:custom.textFilterTopic}
+    #IMAGE_FILTER_TOPIC: ${self:custom.imageFilterTopic}
+    #MD_FILTER_TOPIC: ${self:custom.mdFilterTopic}
+    #TEXT_FILTER_TOPIC: ${self:custom.textFilterTopic}
 
-    IMAGE_PAGE_TOPIC: ${self:custom.imagePageTopic}
-    HTML_PAGE_TOPIC: ${self:custom.htmlPageTopic}
-    INDEX_PAGE_TOPIC: ${self:custom.indexPageTopic}
-    DIRECTORY_PAGE_TOPIC: ${self:custom.directoryPageTopic}
+    #IMAGE_PAGE_TOPIC: ${self:custom.imagePageTopic}
+    #HTML_PAGE_TOPIC: ${self:custom.htmlPageTopic}
+    #INDEX_PAGE_TOPIC: ${self:custom.indexPageTopic}
+    #DIRECTORY_PAGE_TOPIC: ${self:custom.directoryPageTopic}
 
   stage: dev
   region: eu-west-2
@@ -54,7 +67,6 @@ package:
     - node_modules/**
     - tests/**
     - README.md
-    - web/**
 
 functions:
   upload:
@@ -63,33 +75,41 @@ functions:
       - s3:
         bucket: ${self:custom.uploadBucket}
         event: s3:ObjectCreated:*
+    environment:
+      # arn:aws:sns:eu-west-2:752934489335:auto-blog-dev-html-page
+      IMAGE_FILTER_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.imageFilterTopic}" ] ]  }
+      MD_FILTER_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.mdFilterTopic}" ] ]  }
+      TEXT_FILTER_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.textFilterTopic}" ] ]  }
 
   imageFilter:
     handler: functions/imageFilter.handler
     events:
-      - sns:
-        topicName: ${self:custom.imageFilterTopic}
+      - sns: ${self:custom.imageFilterTopic}
+    environment:
+      IMAGE_PAGE_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.imagePageTopic}" ] ]  }
 
   imagePage:
     handler: functions/imagePage.handler
     events:
-      - sns:
-        topicName: ${self:custom.imagePageTopic}
+      - sns: ${self:custom.imagePageTopic}
+    environment:
+      RENDER_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.renderTopic}" ] ]  }
 
   mdFilter:
     handler: functions/mdFilter.handler
     events:
-      - sns:
-        topicName: ${self:custom.mdFilterTopic}
+      - sns: ${self:custom.mdFilterTopic}
+    environment:
+      RENDER_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.renderTopic}" ] ]  }
 
   textFilter:
     handler: functions/textFilter.handler
     events:
-      - sns:
-        topicName: ${self:custom.textFilterTopic}
+      - sns: ${self:custom.textFilterTopic}
+    environment:
+      RENDER_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.renderTopic}" ] ]  }
 
-  htmlPage:
-    handler: functions/htmlPage.handler
+  render:
+    handler: functions/render.handler
     events:
-      - sns:
-        topicName: ${self:custom.imagePageTopic}
+      - sns: ${self:custom.renderTopic}

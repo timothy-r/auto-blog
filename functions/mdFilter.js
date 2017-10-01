@@ -16,22 +16,28 @@ module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
     return callback(null, {});
-    
+
+    var incomingMessage = JSON.parse(event.Records[0].Sns.Message);
+
     // get s3 object
     var params = {
-        Bucket: 'event.Records[0].s3.bucket.name',
-        Key: 'event.Records[0].s3.object.key'
+        Bucket: incomingMessage.bucket.name,
+        Key: incomingMessage.object.key
     };
 
     var object = s3.getObject(params, function(err, response) {
         if (err) {
             console.error(err);
             return callback(null, {});
+        } else {
+            console.log(response);
         }
+
+        return callback(null, {});
+
         // render into html
-        // post event to process.env.HTML_PAGE_TOPIC
+        // post event to process.env.RENDER_TOPIC
     });
 
-    return callback(null, {});
 
 };
