@@ -15,19 +15,19 @@ module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
 
-    var incomingMessage = JSON.parse(event.Records[0].Sns.Message);
+    var message = snsWrapper.getSnsMessage(event);
 
     var template = '';
 
     // Compile the source code
-    switch (incomingMessage.type) {
+    switch (message.type) {
         case 'page':
             template = __dirname + '/web/page.pug';
             break;
         case 'index':
         case 'directory':
         default:
-            throw "Error unknown type: " + incomingMessage.type;
+            throw "Error unknown type: " + message.type;
             break;
     }
 
@@ -38,10 +38,10 @@ module.exports.handler = (event, context, callback) => {
      */
     var html = compiledFunction({
         pageTitle: 'Page',
-        content: incomingMessage.html
+        content: message.html
     });
 
-    var newName = "pages/" + incomingMessage.uid + '.html';
+    var newName = "pages/" + message.uid + '.html';
 
     // upload to S3 object
     var params = {

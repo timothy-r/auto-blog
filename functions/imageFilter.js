@@ -16,13 +16,13 @@ module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
 
-    var incomingMessage = JSON.parse(event.Records[0].Sns.Message);
-    var elements = incomingMessage.event.object.key.split('.');
-    var newName = "images/" + incomingMessage.uid + '.' + elements.pop();
+    var message = snsWrapper.getSnsMessage(event);
+    var elements = message.event.object.key.split('.');
+    var newName = "images/" + message.uid + '.' + elements.pop();
 
     var params = {
         Bucket: process.env.WEB_BUCKET,
-        CopySource: "/" + incomingMessage.event.bucket.name + "/" + incomingMessage.event.object.key,
+        CopySource: "/" + message.event.bucket.name + "/" + message.event.object.key,
         Key: newName,
         ACL: "public-read"
     };
@@ -38,10 +38,11 @@ module.exports.handler = (event, context, callback) => {
 
             snsWrapper.publish(
                 'image.copied',
-                {bucket: process.env.WEB_BUCKET, key: newName, uid: incomingMessage.uid},
+                {bucket: process.env.WEB_BUCKET, key: newName, uid: message.uid},
                 process.env.IMAGE_PAGE_TOPIC,
                 callback
             );
         }
     });
 };
+

@@ -14,11 +14,11 @@ module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
 
-    var incomingMessage = JSON.parse(event.Records[0].Sns.Message);
+    var message = snsWrapper.getSnsMessage(event);
 
     var params = {
-        Bucket: incomingMessage.event.bucket.name,
-        Key: incomingMessage.event.object.key
+        Bucket: message.event.bucket.name,
+        Key: message.event.object.key
     };
 
     var object = s3.getObject(params, (err, response) => {
@@ -29,7 +29,7 @@ module.exports.handler = (event, context, callback) => {
             var html = '<pre>' + response.Body +  '</pre>';
             snsWrapper.publish(
                 'text.html.generated',
-                {html: html, type: 'page', uid: incomingMessage.uid},
+                {html: html, type: 'page', uid: message.uid},
                 process.env.RENDER_TOPIC,
                 callback
             );

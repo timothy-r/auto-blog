@@ -16,15 +16,15 @@ module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
 
-    var incomingMessage = JSON.parse(event.Records[0].Sns.Message);
-    var html = '<img src="/' + incomingMessage.key +  '" />';
+    var message = snsWrapper.getSnsMessage(event);
+    var html = '<img src="/' + message.key +  '" />';
 
     snsWrapper.publish(
         'image.html.generated',
         {
             html: html,
             type: 'page',
-            uid: incomingMessage.uid
+            uid: message.uid
         },
         process.env.RENDER_TOPIC,
         callback
