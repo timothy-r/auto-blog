@@ -1,4 +1,4 @@
-#
+
 service: auto-blog
 
 custom:
@@ -47,29 +47,19 @@ provider:
     UPLOAD_BUCKET: ${self:custom.uploadBucket}
     WEB_BUCKET: ${self:custom.webBucket}
 
-    #IMAGE_FILTER_TOPIC: ${self:custom.imageFilterTopic}
-    #MD_FILTER_TOPIC: ${self:custom.mdFilterTopic}
-    #TEXT_FILTER_TOPIC: ${self:custom.textFilterTopic}
-
-    #IMAGE_PAGE_TOPIC: ${self:custom.imagePageTopic}
-    #HTML_PAGE_TOPIC: ${self:custom.htmlPageTopic}
-    #INDEX_PAGE_TOPIC: ${self:custom.indexPageTopic}
-    #DIRECTORY_PAGE_TOPIC: ${self:custom.directoryPageTopic}
-
   stage: dev
   region: eu-west-2
 
-plugins:
-  - serverless-plugin-webpack
-  
 package:
   exclude:
     - .idea/**
     - .npmignore
     - package.json
-    - node_modules/**
     - tests/**
     - README.md
+
+#plugins:
+#  - serverless-plugin-webpack
 
 functions:
   upload:

@@ -21,7 +21,7 @@ module.exports.handler = (event, context, callback) => {
 
     const s3Event = event.Records[0].s3;
 
-    // if size is 0 this is a 'directory' object - ignore these event
+    // if size is 0 this is a 'directory' object - ignore these events
     if (s3Event.object.size == 0) {
         return callback(null, {});
     }
