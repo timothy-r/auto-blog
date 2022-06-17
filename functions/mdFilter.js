@@ -2,7 +2,6 @@
 
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-// const marked = require('marked');
 const { marked } = require('marked');
 
 const snsWrapper = require('lib/snsWrapper');
@@ -34,7 +33,7 @@ module.exports.handler = (event, context, callback) => {
             // console.log(response);
             // render into html
             var body = response.Body + '';
-            var html = marked(body);
+            var html = marked.parse(body);
 
             snsWrapper.publish(
                 'md.html.generated',
