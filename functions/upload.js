@@ -57,7 +57,7 @@ module.exports.handler = (event, context, callback) => {
                 callback
             );
         } else {
-            console.err('Unhandled content type: ' + response['ContentType']);
+            console.error('Unhandled content type: ' + response['ContentType']);
             return callback(null, {});
         }
 
