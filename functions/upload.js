@@ -2,7 +2,7 @@
 
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-const { v4: uuidv4 } = require('uuid');
+// const { v4: uuidv4 } = require('uuid');
 
 const snsWrapper = require('lib/snsWrapper');
 const contentTypeHandler = require('lib/contentTypeHandler');
@@ -27,7 +27,7 @@ module.exports.handler = (event, context, callback) => {
         return callback(null, {});
     }
 
-    var params = {
+    const params = {
         Bucket: s3Event.bucket.name,
         Key: s3Event.object.key
     };
@@ -38,8 +38,10 @@ module.exports.handler = (event, context, callback) => {
             console.error(err);
             return callback(null, {});
         }
-
-        var topic = contentTypeHandler.selectTopic(response['ContentType']);
+        
+        const k = s3Event.object.key
+        const pathName = k.substring(0, k.lastIndexOf('.')-1)
+        const topic = contentTypeHandler.selectTopic(response['ContentType']);
 
         if (topic) {
             snsWrapper.publish(
@@ -47,9 +49,9 @@ module.exports.handler = (event, context, callback) => {
                 {
                     event: s3Event,
                     // use the S3 Object file name to name the rendered output file
-                    uid: uuidv4(),
-                    // remove the file extension too
-                    name: s3Event.object.key
+                    // uid: uuidv4(),
+                    // path and file name without file extension
+                    pathName: pathName
                 },
                 topic,
                 callback

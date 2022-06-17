@@ -29,7 +29,7 @@ module.exports.handler = (event, context, callback) => {
             var html = '<pre>' + response.Body +  '</pre>';
             snsWrapper.publish(
                 'text.html.generated',
-                {html: html, type: 'page', uid: message.uid},
+                {html: html, type: 'page', pathName: message.pathName},
                 process.env.RENDER_TOPIC,
                 callback
             );

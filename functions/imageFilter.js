@@ -18,7 +18,7 @@ module.exports.handler = (event, context, callback) => {
 
     var message = snsWrapper.getSnsMessage(event);
     var elements = message.event.object.key.split('.');
-    var newName = "images/" + message.uid + '.' + elements.pop();
+    var newName = "images/" + message.pathName + '.' + elements.pop();
 
     var params = {
         Bucket: process.env.WEB_BUCKET,
@@ -38,7 +38,7 @@ module.exports.handler = (event, context, callback) => {
 
             snsWrapper.publish(
                 'image.copied',
-                {bucket: process.env.WEB_BUCKET, key: newName, uid: message.uid},
+                {bucket: process.env.WEB_BUCKET, key: newName, pathName: message.pathName},
                 process.env.IMAGE_PAGE_TOPIC,
                 callback
             );

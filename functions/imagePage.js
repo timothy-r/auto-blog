@@ -24,7 +24,7 @@ module.exports.handler = (event, context, callback) => {
         {
             html: html,
             type: 'page',
-            uid: message.uid
+            pathName: message.pathName
         },
         process.env.RENDER_TOPIC,
         callback

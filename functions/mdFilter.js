@@ -36,7 +36,7 @@ module.exports.handler = (event, context, callback) => {
 
             snsWrapper.publish(
                 'md.html.generated',
-                {html: html, type: 'page', uid: message.uid},
+                {html: html, type: 'page', pathName: message.pathName},
                 process.env.RENDER_TOPIC,
                 callback
             );
