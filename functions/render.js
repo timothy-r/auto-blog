@@ -60,7 +60,7 @@ module.exports.handler = (event, context, callback) => {
             console.error(err);
         } else {
             console.log('Sent: ' + JSON.stringify(params));
-
+            /// publish event for the index page lambda to consume
         }
         return callback(null, {});
     });
