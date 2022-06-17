@@ -39,6 +39,8 @@ module.exports.handler = (event, context, callback) => {
             return callback(null, {});
         }
         
+        console.log(JSON.stringify(response))
+
         const k = s3Event.object.key
         const pathName = k.substring(0, k.lastIndexOf('.'))
         const topic = contentTypeHandler.selectTopic(response['ContentType']);
