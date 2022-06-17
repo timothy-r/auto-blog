@@ -2,7 +2,8 @@
 
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-const uuidv4 = require('uuid/v4');
+import { v4 as uuidv4 } from 'uuid';
+
 const snsWrapper = require('lib/snsWrapper');
 const contentTypeHandler = require('lib/contentTypeHandler');
 
