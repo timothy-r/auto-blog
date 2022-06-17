@@ -41,6 +41,7 @@ module.exports.handler = (event, context, callback) => {
         content: message.html
     });
 
+    /** don't hard code path to the file */
     var newName = "pages/" + message.uid + '.html';
 
     // upload to S3 object
