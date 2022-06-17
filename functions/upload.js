@@ -45,6 +45,7 @@ module.exports.handler = (event, context, callback) => {
                 'object.created',
                 {
                     event: s3Event,
+                    // use the S3 Object file name to name the rendered output file
                     uid: uuidv4()
                 },
                 topic,
