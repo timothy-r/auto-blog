@@ -23,7 +23,7 @@ custom:
 # frameworkVersion: "=X.X.X"
 provider:
   name: aws
-  runtime: nodejs6.10
+  runtime: nodejs16.x
   memorySize: 128
   iamRoleStatements:
     - Effect: Allow
@@ -66,8 +66,10 @@ functions:
     handler: functions/upload.handler
     events:
       - s3:
-        bucket: ${self:custom.uploadBucket}
-        event: s3:ObjectCreated:*
+          bucket: ${self:custom.uploadBucket}
+          event: s3:ObjectCreated:*
+          existing: false
+        
     environment:
       # arn:aws:sns:eu-west-2:752934489335:auto-blog-dev-html-page
       IMAGE_FILTER_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.imageFilterTopic}" ] ]  }
@@ -77,32 +79,37 @@ functions:
   imageFilter:
     handler: functions/imageFilter.handler
     events:
-      - sns: ${self:custom.imageFilterTopic}
+      - sns: 
+          topicName: ${self:custom.imageFilterTopic}
     environment:
       IMAGE_PAGE_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.imagePageTopic}" ] ]  }
 
   imagePage:
     handler: functions/imagePage.handler
     events:
-      - sns: ${self:custom.imagePageTopic}
+      - sns:
+          topicName: ${self:custom.imagePageTopic}
     environment:
       RENDER_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.renderTopic}" ] ]  }
 
   mdFilter:
     handler: functions/mdFilter.handler
     events:
-      - sns: ${self:custom.mdFilterTopic}
+      - sns: 
+          topicName: ${self:custom.mdFilterTopic}
     environment:
       RENDER_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.renderTopic}" ] ]  }
 
   textFilter:
     handler: functions/textFilter.handler
     events:
-      - sns: ${self:custom.textFilterTopic}
+      - sns: 
+          topicName: ${self:custom.textFilterTopic}
     environment:
       RENDER_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.renderTopic}" ] ]  }
 
   render:
     handler: functions/render.handler
     events:
-      - sns: ${self:custom.renderTopic}
+      - sns: 
+          topicName: ${self:custom.renderTopic}
