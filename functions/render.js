@@ -37,12 +37,14 @@ module.exports.handler = (event, context, callback) => {
     /**
      * need to provide a page title - S3 object tag name?
      */
+    const title = message.pathName.substring(message.pathName.lastIndexOf('/')+1)
+
     var html = compiledFunction({
-        pageTitle: 'Page',
+        pageTitle: title,
         content: message.html
     });
 
-    /** don't hard code path to the file */
+    /** don't hard code path to this file */
     var newName = "pages/" + message.pathName + '.html';
 
     // upload to S3 object
