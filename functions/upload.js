@@ -1,11 +1,13 @@
 'use strict';
 
-// const AWS = require('aws-sdk');
-// const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-import {S3} from "@aws-sdk/client-s3";
+const AWS = require('aws-sdk');
+const S3 = new AWS.S3({apiVersion: '2006-03-01'});
+// import {S3} from "@aws-sdk/client-s3";
 
-const snsWrapper = require('lib/snsWrapper');
-const contentTypeHandler = require('lib/contentTypeHandler');
+const { S3Client, HeadObjectCommand } = require("@aws-sdk/client-s3");
+
+const snsWrapper = require('./lib/snsWrapper');
+const contentTypeHandler = require('./lib/contentTypeHandler');
 
 /**
  * Handle S3 object events
@@ -53,7 +55,6 @@ module.exports.handler = (event, context, callback) => {
                 {
                     event: s3Event,
                     // use the S3 Object file name to name the rendered output file
-                    // uid: uuidv4(),
                     // path and file name without file extension
                     pathName: pathName
                 },

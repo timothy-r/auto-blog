@@ -1,11 +1,10 @@
 'use strict';
 
-// const AWS = require('aws-sdk');
-// const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-import {S3} from "@aws-sdk/client-s3";
+const AWS = require('aws-sdk');
+const S3 = new AWS.S3({apiVersion: '2006-03-01'});
+// import {S3} from "@aws-sdk/client-s3";
 
-
-const snsWrapper = require('lib/snsWrapper');
+const snsWrapper = require('./lib/snsWrapper');
 
 /**
  * process image objects - add to the web bucket in /images, generate a unique file name
