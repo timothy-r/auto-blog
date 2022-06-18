@@ -16,19 +16,16 @@ module.exports.handler = (event, context, callback) => {
 
     const inboundMessage = snsWrapper.getSnsMessage(event);
     
-    const elements = inboundMessage.event.object.key.split('.');
-    const newName = "images/" + inboundMessage.pathName + '.' + elements.pop();
-    const source = "/" + inboundMessage.event.bucket.name + "/" + inboundMessage.event.object.key;
+    // const elements = inboundMessage.event.object.key.split('.');
+    const newName = "images/" + inboundMessage.pathName + '.' + inboundMessage.ext;
+    // const source = "/" + inboundMessage.bucket + "/" + inboundMessage.key;
     const acl = "public-read";
 
-    const outboundMessage = {
-        bucket: process.env.WEB_BUCKET, 
-        key: newName, 
-        pathName: inboundMessage.pathName
-    }
+    var outboundMessage = JSON.parse(JSON.stringify(inboundMessage));
+    outboundMessage['targetFile'] = newName;
 
     // should resize large images down to something smaller
-    const resultPromise = s3Wrapper.copyObject(source, process.env.WEB_BUCKET, newName, acl);
+    const resultPromise = s3Wrapper.copyObject(inboundMessage.source, process.env.WEB_BUCKET, newName, acl);
 
     resultPromise.then(function(response){
         return snsWrapper.publish(

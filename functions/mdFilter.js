@@ -18,11 +18,15 @@ module.exports.handler = (event, context, callback) => {
     const inboundMessage = snsWrapper.getSnsMessage(event);
 
     // get s3 object
-    const resultPromise = s3Wrapper.getObjectBodyAsString(inboundMessage.event.bucket.name, inboundMessage.event.object.key);
+    const resultPromise = s3Wrapper.getObjectBodyAsString(inboundMessage.bucket, inboundMessage.key);
 
     resultPromise.then(function(body){
-        return renderHTMLFromMD(inboundMessage.pathName, body)
-    }).then(function(message){
+        return renderHTMLFromMD(body)
+    }).then(function(html){
+        // add more attributes to the message
+        var message = JSON.parse(JSON.stringify(inboundMessage));
+        message['html'] = html
+        message['type'] = 'page'
         return snsWrapper.publish(
             'md.html.generated',
             message,
@@ -36,11 +40,14 @@ module.exports.handler = (event, context, callback) => {
     return callback(null, {});
 };
 
-function renderHTMLFromMD(path, body) {
+function renderHTMLFromMD(body) {
+
+    return marked.parse(body + '');
+
     // render into html
-    return {
-        html: marked.parse(body + ''),
-        type: 'page',
-        pathName: path
-    }
+    // return {
+    //     html: marked.parse(body + ''),
+    //     type: 'page',
+    //     pathName: path
+    // }
 };

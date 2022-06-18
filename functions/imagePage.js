@@ -15,11 +15,9 @@ module.exports.handler = (event, context, callback) => {
 
     const inboundMessage = snsWrapper.getSnsMessage(event);
 
-    const outboundMessage = {
-        html: '<img src="/' + inboundMessage.key +  '" />',
-        type: 'page',
-        pathName: inboundMessage.pathName
-    }
+    var outboundMessage = JSON.parse(JSON.stringify(inboundMessage));
+    outboundMessage['html'] = '<img src="/' + inboundMessage.targetFile +  '" />';
+    outboundMessage['type'] = 'page';
 
     const responsePromise = snsWrapper.publish(
         'image.html.generated',

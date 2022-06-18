@@ -17,7 +17,7 @@ module.exports.handler = (event, context, callback) => {
 
     const message = snsWrapper.getSnsMessage(event);
 
-    const html = renderTemplate(message.type, message.pathName, message.html)
+    const html = renderTemplate(message.type, message.pathName, message.html, message.fileName)
 
     /** don't hard code path to this file */
     var newName = "pages/" + message.pathName + '.html';
@@ -35,7 +35,7 @@ module.exports.handler = (event, context, callback) => {
     return callback(null, {});
 };
 
-function renderTemplate(type, pathName, html) {
+function renderTemplate(type, pathName, html, fileName) {
 
     var template = '';
 
@@ -53,13 +53,8 @@ function renderTemplate(type, pathName, html) {
 
     var compiledFunction = pug.compileFile(template);
 
-    /**
-     * need to provide a page title - S3 object tag name?
-     */
-    const title = pathName.substring(pathName.lastIndexOf('/')+1)
-
     return compiledFunction({
-        pageTitle: title,
+        pageTitle: fileName,
         content: html
     });
 };

@@ -40,19 +40,36 @@ module.exports.handler = (event, context, callback) => {
     return callback(null, {});
 };
 
+/**
+ * Extracts S3 object data fir use by other functions
+ * 
+ * @param {*} inboundMessage 
+ * @param {*} objectMetadata 
+ * @returns 
+ */
 function generateMessage(inboundMessage, objectMetadata) {
-    console.log(inboundMessage.bucket.name + '/' + inboundMessage.object.key + " = " + JSON.stringify(objectMetadata))
+    // console.log(inboundMessage.bucket.name + '/' + inboundMessage.object.key + " = " + JSON.stringify(objectMetadata))
     
     const k = inboundMessage.object.key
     const pathName = k.substring(0, k.lastIndexOf('.'))
     const ext = k.substring(k.lastIndexOf('.')+1)
     // if content type is binary/octet-stream then use the file extension
     const topic = contentTypeHandler.selectTopic(objectMetadata['ContentType'], ext);
+    const fileName = pathName.substring(pathName.lastIndexOf('/')+1)
 
     if (topic) {
+        
         return {
-            event: inboundMessage,
+            source: inboundMessage.bucket.name + "/" + inboundMessage.object.key,
+            bucket: inboundMessage.bucket.name,
+            // full path, file & extension
+            key: inboundMessage.object.key,
+            // path & file
             pathName: pathName,
+            // just file name, without extension
+            fileName: fileName,
+            // file extension
+            ext: ext,
             topic: topic
         }
     } else {
