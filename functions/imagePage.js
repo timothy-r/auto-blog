@@ -1,7 +1,6 @@
 'use strict';
 
-const snsWrapper = require('lib/snsWrapper');
-
+const snsWrapper = require('./lib/snsWrapper');
 
 /**
  * create html to insert for a page with a single image file
@@ -14,17 +13,21 @@ module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
 
-    var message = snsWrapper.getSnsMessage(event);
-    var html = '<img src="/' + message.key +  '" />';
+    const inboundMessage = snsWrapper.getSnsMessage(event);
 
-    snsWrapper.publish(
+    const outboundMessage = {
+        html: '<img src="/' + inboundMessage.key +  '" />',
+        type: 'page',
+        pathName: inboundMessage.pathName
+    }
+
+    if (!snsWrapper.publish(
         'image.html.generated',
-        {
-            html: html,
-            type: 'page',
-            pathName: message.pathName
-        },
-        process.env.RENDER_TOPIC,
-        callback
-    );
+        outboundMessage,
+        process.env.RENDER_TOPIC
+    )){
+        console.error("Failed to send message to : " + process.env.RENDER_TOPIC)
+    }
+
+    return callback(null, {})
 };

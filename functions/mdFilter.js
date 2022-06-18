@@ -1,10 +1,8 @@
 'use strict';
 
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const { marked } = require('marked');
-
-const snsWrapper = require('lib/snsWrapper');
+const snsWrapper = require('./lib/snsWrapper');
+const s3Wrapper = require('./lib/s3Wrapper');
 
 /**
  * process md file objects - render into html
@@ -17,30 +15,39 @@ module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
 
-    var message = snsWrapper.getSnsMessage(event);
+    const inboundMessage = snsWrapper.getSnsMessage(event);
 
     // get s3 object
-    var params = {
-        Bucket: message.event.bucket.name,
-        Key: message.event.object.key
-    };
+    const resultPromise = s3Wrapper.getObjectBodyAsString(inboundMessage.event.bucket.name, inboundMessage.event.object.key);
 
-    var object = s3.getObject(params, function(err, response) {
-        if (err) {
-            console.error(err);
-            return callback(null, {});
-        } else {
-            // console.log(response);
-            // render into html
-            var body = response.Body + '';
-            var html = marked.parse(body);
+    resultPromise.then(function(body){
+        return renderHTMLFromMD(inboundMessage.pathName, body)
+    }).then(function(message){
+        return sendMessage(message)
+    })
+    .catch(function(err){
+        console.error(err)
+    })
 
-            snsWrapper.publish(
-                'md.html.generated',
-                {html: html, type: 'page', pathName: message.pathName},
-                process.env.RENDER_TOPIC,
-                callback
-            );
-        }
-    });
+    return callback(null, {});
+};
+
+function renderHTMLFromMD(path, body) {
+    // render into html
+    return {
+        html: marked.parse(body + ''),
+        type: 'page',
+        pathName: path
+    }
+};
+
+function sendMessage(message) {
+
+    if (! snsWrapper.publish(
+        'md.html.generated',
+        message,
+        process.env.RENDER_TOPIC
+    )) {
+        console.error("Failed to send message to : " + process.env.RENDER_TOPIC)
+    }
 };

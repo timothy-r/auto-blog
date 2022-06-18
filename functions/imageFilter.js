@@ -1,9 +1,7 @@
 'use strict';
 
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-
-const snsWrapper = require('lib/snsWrapper');
+const s3Wrapper = require('./lib/s3Wrapper');
+const snsWrapper = require('./lib/snsWrapper');
 
 /**
  * process image objects - add to the web bucket in /images, generate a unique file name
@@ -16,33 +14,38 @@ module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
 
-    var message = snsWrapper.getSnsMessage(event);
-    var elements = message.event.object.key.split('.');
-    var newName = "images/" + message.pathName + '.' + elements.pop();
+    const inboundMessage = snsWrapper.getSnsMessage(event);
+    
+    const elements = inboundMessage.event.object.key.split('.');
+    const newName = "images/" + inboundMessage.pathName + '.' + elements.pop();
+    const source = "/" + inboundMessage.event.bucket.name + "/" + inboundMessage.event.object.key;
+    const acl = "public-read";
 
-    var params = {
-        Bucket: process.env.WEB_BUCKET,
-        CopySource: "/" + message.event.bucket.name + "/" + message.event.object.key,
-        Key: newName,
-        ACL: "public-read"
-    };
+    const outboundMessage = {
+        bucket: process.env.WEB_BUCKET, 
+        key: newName, 
+        pathName: inboundMessage.pathName
+    }
 
     // should resize large images down to something smaller
+    const resultPromise = s3Wrapper.copyObject(source, process.env.WEB_BUCKET, newName, acl);
 
-    s3.copyObject(params, function(err, response){
+    resultPromise.then(function(response){
+        return sendMessage(outboundMessage)
+    })
+    .catch(function(err){
+        console.error(err)
+    })
 
-        if (err) {
-            console.error(err, err.stack);
-            return callback(null, {});
-        } else {
-
-            snsWrapper.publish(
-                'image.copied',
-                {bucket: process.env.WEB_BUCKET, key: newName, pathName: message.pathName},
-                process.env.IMAGE_PAGE_TOPIC,
-                callback
-            );
-        }
-    });
+    return callback(null, {});
 };
 
+function sendMessage(outboundMessage) {
+    if (! snsWrapper.publish(
+        'image.copied',
+        outboundMessage,
+        process.env.IMAGE_PAGE_TOPIC)) 
+        {
+            console.error("Failed to send message to : " + process.env.IMAGE_PAGE_TOPIC)
+        } 
+};
