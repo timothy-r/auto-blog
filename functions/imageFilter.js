@@ -31,21 +31,14 @@ module.exports.handler = (event, context, callback) => {
     const resultPromise = s3Wrapper.copyObject(source, process.env.WEB_BUCKET, newName, acl);
 
     resultPromise.then(function(response){
-        return sendMessage(outboundMessage)
+        return snsWrapper.publish(
+            'image.copied',
+            outboundMessage,
+            process.env.IMAGE_PAGE_TOPIC);
     })
     .catch(function(err){
         console.error(err)
     })
 
     return callback(null, {});
-};
-
-function sendMessage(outboundMessage) {
-    if (! snsWrapper.publish(
-        'image.copied',
-        outboundMessage,
-        process.env.IMAGE_PAGE_TOPIC)) 
-        {
-            console.error("Failed to send message to : " + process.env.IMAGE_PAGE_TOPIC)
-        } 
 };

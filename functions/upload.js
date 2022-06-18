@@ -27,8 +27,11 @@ module.exports.handler = (event, context, callback) => {
     // get s3 object metadata
     const resultPromise = s3Wrapper.headObject(inboundMessage.bucket.name, inboundMessage.object.key);
 
-    resultPromise.then(function(result){
-        return sendUploadedMessage(inboundMessage, result)
+    resultPromise.then(function(result) {
+        return generateMessage(inboundMessage, result)
+    })
+    .then(function(message){
+        return snsWrapper.publish('object.created', message, message.topic);
     })
     .catch(function(err){
         console.error(err)
@@ -37,8 +40,7 @@ module.exports.handler = (event, context, callback) => {
     return callback(null, {});
 };
 
-function sendUploadedMessage(inboundMessage, objectMetadata) {
-
+function generateMessage(inboundMessage, objectMetadata) {
     console.log(inboundMessage.bucket.name + '/' + inboundMessage.object.key + " = " + JSON.stringify(objectMetadata))
     
     const k = inboundMessage.object.key
@@ -48,17 +50,12 @@ function sendUploadedMessage(inboundMessage, objectMetadata) {
     const topic = contentTypeHandler.selectTopic(objectMetadata['ContentType'], ext);
 
     if (topic) {
-        const outboundMessage = {
+        return {
             event: inboundMessage,
-            pathName: pathName
-        }
-
-        const result = snsWrapper.publish('object.created', outboundMessage, topic);
-
-        if (! result) {
-            console.error("Failed to send message to : " + topic)
+            pathName: pathName,
+            topic: topic
         }
     } else {
-        console.error('Unhandled content type: ' + objectMetadata['ContentType']);
+        throw 'Unhandled content type: ' + objectMetadata['ContentType']
     }
 }

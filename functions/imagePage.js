@@ -21,13 +21,17 @@ module.exports.handler = (event, context, callback) => {
         pathName: inboundMessage.pathName
     }
 
-    if (!snsWrapper.publish(
+    const responsePromise = snsWrapper.publish(
         'image.html.generated',
         outboundMessage,
         process.env.RENDER_TOPIC
-    )){
-        console.error("Failed to send message to : " + process.env.RENDER_TOPIC)
-    }
+    );
+
+    responsePromise.then(function(result){
+        console.log("Sent message")
+    }).catch(function(error){
+        console.error(error)
+    })
 
     return callback(null, {})
 };

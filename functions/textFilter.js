@@ -20,7 +20,11 @@ module.exports.handler = (event, context, callback) => {
     resultPromise.then(function(body){
         return renderHTMLFromTXT(inboundMessage.pathName, body)
     }).then(function(message){
-        return sendMessage(message)
+        return snsWrapper.publish(
+            'text.html.generated',
+            message,
+            process.env.RENDER_TOPIC
+        );
     })
     .catch(function(err){
         console.error(err)
@@ -35,16 +39,5 @@ function renderHTMLFromTXT(path, body){
         html: '<pre>' + body +  '</pre>',
         type: 'page',
         pathName: path
-    }
-};
-
-function sendMessage(message) {
-
-    if (! snsWrapper.publish(
-        'text.html.generated',
-        message,
-        process.env.RENDER_TOPIC
-    )) {
-        console.error("Failed to send message to : " + process.env.RENDER_TOPIC)
     }
 };
