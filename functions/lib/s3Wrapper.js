@@ -26,7 +26,31 @@ module.exports.getObject = async (bucket, key) => {
     
     return executeCommand(command)
 };
+module.exports.getObjectBodyAsString = async (bucket, key) => {
+    const command = new GetObjectCommand({
+        Bucket: bucket,
+        Key: key
+    });
 
+    const streamToString = (stream) =>
+        new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on("data", (chunk) => chunks.push(chunk));
+        stream.on("error", reject);
+        stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+        });
+
+    try { 
+        const config = {}
+        const client = new S3Client(config);
+        const { Body } = await client.send(command);
+        const bodyContents = await streamToString(Body);
+        return bodyContents
+
+    } catch (err){
+        return false;
+    }
+}
 /**
  * Copies source to bucket/key
  * @returns promise 

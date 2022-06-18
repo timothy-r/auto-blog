@@ -18,10 +18,11 @@ module.exports.handler = (event, context, callback) => {
     const inboundMessage = snsWrapper.getSnsMessage(event);
 
     // get s3 object
-    const resultPromise = s3Wrapper.getObject(inboundMessage.bucket.name, inboundMessage.object.key);
+    const resultPromise = s3Wrapper.getObjectBodyAsString(inboundMessage.event.bucket.name, inboundMessage.event.object.key);
 
     resultPromise.then(function(result){
-        return renderHTMLFromMD(inboundMessage, result.Body)
+        console.log(result['Body'] + '')
+        return renderHTMLFromMD(inboundMessage.pathName, result['Body'] + '')
     }).then(function(message){
         return sendMessage(message)
     })
@@ -32,12 +33,12 @@ module.exports.handler = (event, context, callback) => {
     return callback(null, {});
 };
 
-function renderHTMLFromMD(inboundMessage, body) {
+function renderHTMLFromMD(path, body) {
     // render into html
     return {
         html: marked.parse(body + ''),
         type: 'page',
-        pathName: inboundMessage.pathName
+        pathName: path
     }
 };
 

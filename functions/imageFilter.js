@@ -15,6 +15,7 @@ module.exports.handler = (event, context, callback) => {
     console.log(JSON.stringify(event));
 
     const inboundMessage = snsWrapper.getSnsMessage(event);
+    
     const elements = inboundMessage.event.object.key.split('.');
     const newName = "images/" + inboundMessage.pathName + '.' + elements.pop();
     const source = "/" + inboundMessage.event.bucket.name + "/" + inboundMessage.event.object.key;
