@@ -1,8 +1,8 @@
 'use strict';
 
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-// const { v4: uuidv4 } = require('uuid');
+// const AWS = require('aws-sdk');
+// const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+import {S3} from "@aws-sdk/client-s3";
 
 const snsWrapper = require('lib/snsWrapper');
 const contentTypeHandler = require('lib/contentTypeHandler');
@@ -33,7 +33,7 @@ module.exports.handler = (event, context, callback) => {
         Key: k
     };
 
-    var object = s3.headObject(params, (err, response) => {
+    var object = S3.headObject(params, (err, response) => {
 
         if (err) {
             console.error(err);

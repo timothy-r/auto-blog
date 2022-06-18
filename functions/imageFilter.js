@@ -1,7 +1,9 @@
 'use strict';
 
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+// const AWS = require('aws-sdk');
+// const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+import {S3} from "@aws-sdk/client-s3";
+
 
 const snsWrapper = require('lib/snsWrapper');
 
@@ -29,7 +31,7 @@ module.exports.handler = (event, context, callback) => {
 
     // should resize large images down to something smaller
 
-    s3.copyObject(params, function(err, response){
+    S3.copyObject(params, function(err, response){
 
         if (err) {
             console.error(err, err.stack);

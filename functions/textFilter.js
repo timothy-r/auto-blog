@@ -1,7 +1,9 @@
 'use strict';
 
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+import {S3} from "@aws-sdk/client-s3";
+
+// const AWS = require('aws-sdk');
+// const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const snsWrapper = require('lib/snsWrapper');
 
 /**
@@ -21,7 +23,7 @@ module.exports.handler = (event, context, callback) => {
         Key: message.event.object.key
     };
 
-    var object = s3.getObject(params, (err, response) => {
+    var object = S3.getObject(params, (err, response) => {
         if (err) {
             console.error(err);
             return callback(null, {});

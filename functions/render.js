@@ -1,7 +1,9 @@
 'use strict';
 
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+import {S3} from "@aws-sdk/client-s3";
+
+// const AWS = require('aws-sdk');
+// const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const pug = require('pug');
 const snsWrapper = require('lib/snsWrapper');
 
@@ -56,7 +58,7 @@ module.exports.handler = (event, context, callback) => {
         ContentType: "text/html"
     };
 
-    var object = s3.putObject(params, (err, response) => {
+    var object = S3.putObject(params, (err, response) => {
 
         if (err) {
             console.error(err);
