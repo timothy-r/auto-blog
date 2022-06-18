@@ -17,16 +17,22 @@ module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
 
-    var message = snsWrapper.getSnsMessage(event);
-    var elements = message.event.object.key.split('.');
-    var newName = "images/" + message.pathName + '.' + elements.pop();
+    const inboundMessage = snsWrapper.getSnsMessage(event);
+    const elements = inboundMessage.event.object.key.split('.');
+    const newName = "images/" + inboundMessage.pathName + '.' + elements.pop();
 
-    var params = {
+    const params = {
         Bucket: process.env.WEB_BUCKET,
-        CopySource: "/" + message.event.bucket.name + "/" + message.event.object.key,
+        CopySource: "/" + inboundMessage.event.bucket.name + "/" + inboundMessage.event.object.key,
         Key: newName,
         ACL: "public-read"
     };
+
+    const outboundMessage = {
+        bucket: process.env.WEB_BUCKET, 
+        key: newName, 
+        pathName: inboundMessage.pathName
+    }
 
     // should resize large images down to something smaller
 
@@ -34,16 +40,18 @@ module.exports.handler = (event, context, callback) => {
 
         if (err) {
             console.error(err, err.stack);
-            return callback(null, {});
         } else {
 
-            snsWrapper.publish(
+            if (! snsWrapper.publish(
                 'image.copied',
-                {bucket: process.env.WEB_BUCKET, key: newName, pathName: message.pathName},
-                process.env.IMAGE_PAGE_TOPIC,
-                callback
-            );
+                outboundMessage,
+                process.env.IMAGE_PAGE_TOPIC)) 
+                {
+                    console.error("Failed to send message to : " + process.env.IMAGE_PAGE_TOPIC)
+                }
         }
+
+        return callback(null, {})
     });
 };
 

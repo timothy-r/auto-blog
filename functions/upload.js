@@ -22,17 +22,17 @@ module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
 
-    const s3Event = event.Records[0].s3;
-    const k = s3Event.object.key
+    const inboundMessage = event.Records[0].s3;
 
     // if size is 0 this is a 'directory' object - ignore these events
-    if (s3Event.object.size == 0) {
+    if (inboundMessage.object.size == 0) {
         return callback(null, {});
     }
 
+    // get s3 object
     const params = {
-        Bucket: s3Event.bucket.name,
-        Key: k
+        Bucket: inboundMessage.bucket.name,
+        Key: inboundMessage.object.key
     };
 
     var object = S3.headObject(params, (err, response) => {
@@ -40,31 +40,34 @@ module.exports.handler = (event, context, callback) => {
         if (err) {
             console.error(err);
             return callback(null, {});
-        }
+        } 
         
         console.log(JSON.stringify(response))
 
+        const k = inboundMessage.object.key
         const pathName = k.substring(0, k.lastIndexOf('.'))
         const ext = k.substring(k.lastIndexOf('.')+1)
         // if content type is binary/octet-stream then use the file extension
         const topic = contentTypeHandler.selectTopic(response['ContentType'], ext);
 
         if (topic) {
-            snsWrapper.publish(
+            const outboundMessage = {
+                event: inboundMessage,
+                pathName: pathName
+            }
+
+            if (! snsWrapper.publish(
                 'object.created',
-                {
-                    event: s3Event,
-                    // use the S3 Object file name to name the rendered output file
-                    // path and file name without file extension
-                    pathName: pathName
-                },
-                topic,
-                callback
-            );
+                outboundMessage,
+                topic
+            )) {
+                console.error("Failed to send message to : " + topic)
+            }
         } else {
             console.error('Unhandled content type: ' + response['ContentType']);
-            return callback(null, {});
+            
         }
 
+        return callback(null, {});
     });
 };

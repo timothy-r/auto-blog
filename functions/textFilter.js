@@ -16,26 +16,33 @@ module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
 
-    var message = snsWrapper.getSnsMessage(event);
-
-    var params = {
-        Bucket: message.event.bucket.name,
-        Key: message.event.object.key
+    const inboundMessage = snsWrapper.getSnsMessage(event);
+    const params = {
+        Bucket: inboundMessage.event.bucket.name,
+        Key: inboundMessage.event.object.key
     };
 
     var object = S3.getObject(params, (err, response) => {
         if (err) {
             console.error(err);
-            return callback(null, {});
         } else {
-            var html = '<pre>' + response.Body +  '</pre>';
-            snsWrapper.publish(
+            
+            const outboundMessage = {
+                html: '<pre>' + response.Body +  '</pre>',
+                type: 'page',
+                pathName: inboundMessage.pathName
+            }
+
+            if (! snsWrapper.publish(
                 'text.html.generated',
-                {html: html, type: 'page', pathName: message.pathName},
-                process.env.RENDER_TOPIC,
-                callback
-            );
+                outboundMessage,
+                process.env.RENDER_TOPIC
+            )) {
+                console.error("Failed to send message to : " + process.env.RENDER_TOPIC)
+            }
         }
+
+        return callback(null, {})
     });
 };
 

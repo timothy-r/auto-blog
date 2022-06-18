@@ -9,7 +9,7 @@ const { SNSClient, PublishCommand } = require("@aws-sdk/client-sns");
  * @param topic ARN of SNS topic to publish to
  * @param callback cb function
  */
-module.exports.publish = (subject, message, topic, callback) => {
+module.exports.publish = (subject, message, topic) => {
 
     const input = {
         Subject: subject,
@@ -21,18 +21,15 @@ module.exports.publish = (subject, message, topic, callback) => {
     const client = new SNSClient(config);
     const command = new PublishCommand(input);
 
-    publishMessage(client, command);
-    return callback(null, {});
+    return publishMessage(client, command);
 };
 
 async function publishMessage(client, command){
     try {
         const response = await client.send(command);
-        console.log('Sent: ' + JSON.stringify(response));
         return true;
 
     } catch (err){
-        console.error(err);
         return false;
 
     } finally {
