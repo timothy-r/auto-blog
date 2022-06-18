@@ -113,3 +113,14 @@ functions:
     events:
       - sns: 
           topicName: ${self:custom.renderTopic}
+    environment:
+       INDEX_PAGE_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.indexPageTopic}" ] ]  }
+   
+  indexFilter:
+    handler: functions/indexFilter.handler
+    events:
+      - sns:
+          topicName: ${self:custom.indexPageTopic}
+    environment:
+       DIRECTORY_PAGE_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.directoryPageTopic}" ] ]  }
+   
