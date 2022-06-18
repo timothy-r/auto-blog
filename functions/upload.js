@@ -1,11 +1,6 @@
 'use strict';
 
-const AWS = require('aws-sdk');
-const S3 = new AWS.S3({apiVersion: '2006-03-01'});
-// import {S3} from "@aws-sdk/client-s3";
-
-const { S3Client, HeadObjectCommand } = require("@aws-sdk/client-s3");
-
+const s3Wrapper = require('./lib/s3Wrapper');
 const snsWrapper = require('./lib/snsWrapper');
 const contentTypeHandler = require('./lib/contentTypeHandler');
 
@@ -29,45 +24,41 @@ module.exports.handler = (event, context, callback) => {
         return callback(null, {});
     }
 
-    // get s3 object
-    const params = {
-        Bucket: inboundMessage.bucket.name,
-        Key: inboundMessage.object.key
-    };
+    // get s3 object metadata
+    const resultPromise = s3Wrapper.headObject(inboundMessage.bucket.name, inboundMessage.object.key);
 
-    var object = S3.headObject(params, (err, response) => {
+    resultPromise.then(function(result){
+        return sendUploadedMessage(inboundMessage, result)
+    })
+    .catch(function(err){
+        console.error(err)
+    })
 
-        if (err) {
-            console.error(err);
-            return callback(null, {});
-        } 
-        
-        console.log(JSON.stringify(response))
+    return callback(null, {});
+};
 
-        const k = inboundMessage.object.key
-        const pathName = k.substring(0, k.lastIndexOf('.'))
-        const ext = k.substring(k.lastIndexOf('.')+1)
-        // if content type is binary/octet-stream then use the file extension
-        const topic = contentTypeHandler.selectTopic(response['ContentType'], ext);
+function sendUploadedMessage(inboundMessage, objectMetadata) {
 
-        if (topic) {
-            const outboundMessage = {
-                event: inboundMessage,
-                pathName: pathName
-            }
+    console.log(inboundMessage.bucket.name + '/' + inboundMessage.object.key + " = " + JSON.stringify(objectMetadata))
+    
+    const k = inboundMessage.object.key
+    const pathName = k.substring(0, k.lastIndexOf('.'))
+    const ext = k.substring(k.lastIndexOf('.')+1)
+    // if content type is binary/octet-stream then use the file extension
+    const topic = contentTypeHandler.selectTopic(objectMetadata['ContentType'], ext);
 
-            if (! snsWrapper.publish(
-                'object.created',
-                outboundMessage,
-                topic
-            )) {
-                console.error("Failed to send message to : " + topic)
-            }
-        } else {
-            console.error('Unhandled content type: ' + response['ContentType']);
-            
+    if (topic) {
+        const outboundMessage = {
+            event: inboundMessage,
+            pathName: pathName
         }
 
-        return callback(null, {});
-    });
-};
+        const result = snsWrapper.publish('object.created', outboundMessage, topic);
+
+        if (! result) {
+            console.error("Failed to send message to : " + topic)
+        }
+    } else {
+        console.error('Unhandled content type: ' + objectMetadata['ContentType']);
+    }
+}

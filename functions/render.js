@@ -1,13 +1,11 @@
 'use strict';
 
-// import {S3} from "@aws-sdk/client-s3";
-
-const AWS = require('aws-sdk');
-const S3 = new AWS.S3({apiVersion: '2006-03-01'});
 const pug = require('pug');
 const snsWrapper = require('./lib/snsWrapper');
+const s3Wrapper = require('./lib/s3Wrapper');
+
 /**
- * render a full html page with a html snippet
+ * render a full html page from a html snippet
  *
  * @param event
  * @param context
@@ -48,23 +46,21 @@ module.exports.handler = (event, context, callback) => {
     /** don't hard code path to this file */
     var newName = "pages/" + message.pathName + '.html';
 
-    // upload to S3 object
-    var params = {
-        Body: html,
-        Bucket: process.env.WEB_BUCKET,
-        Key: newName,
-        ACL: 'public-read',
-        ContentType: "text/html"
-    };
+    // upload the full HTML to the public bucket
+    const resultPromise = s3Wrapper.putObject(html, process.env.WEB_BUCKET, newName, 'public-read', "text/html");
 
-    var object = S3.putObject(params, (err, response) => {
+    resultPromise.then(function(response){
+        return sendMessage(newName)
+    })
+    .catch(function(err){
+        console.error(err)
+    })
 
-        if (err) {
-            console.error(err);
-        } else {
-            console.log('Sent: ' + JSON.stringify(params));
-            /// publish event for the index page lambda to consume
-        }
-        return callback(null, {});
-    });
+    return callback(null, {});
+};
+
+function sendMessage(params) {
+
+    // implement later
+    console.log('Sent: ' + params);
 };

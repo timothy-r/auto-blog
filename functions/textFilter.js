@@ -1,10 +1,7 @@
 'use strict';
 
-// import {S3} from "@aws-sdk/client-s3";
-
-const AWS = require('aws-sdk');
-const S3 = new AWS.S3({apiVersion: '2006-03-01'});
 const snsWrapper = require('./lib/snsWrapper');
+const s3Wrapper = require('./lib/s3Wrapper');
 
 /**
  * process text file objects - render into html
@@ -17,32 +14,37 @@ module.exports.handler = (event, context, callback) => {
     console.log(JSON.stringify(event));
 
     const inboundMessage = snsWrapper.getSnsMessage(event);
-    const params = {
-        Bucket: inboundMessage.event.bucket.name,
-        Key: inboundMessage.event.object.key
-    };
 
-    var object = S3.getObject(params, (err, response) => {
-        if (err) {
-            console.error(err);
-        } else {
-            
-            const outboundMessage = {
-                html: '<pre>' + response.Body +  '</pre>',
-                type: 'page',
-                pathName: inboundMessage.pathName
-            }
+    const resultPromise = s3Wrapper.getObject(inboundMessage.bucket.name, inboundMessage.object.key);
 
-            if (! snsWrapper.publish(
-                'text.html.generated',
-                outboundMessage,
-                process.env.RENDER_TOPIC
-            )) {
-                console.error("Failed to send message to : " + process.env.RENDER_TOPIC)
-            }
-        }
+    resultPromise.then(function(result){
+        return renderHTMLFromTXT(inboundMessage, result.Body)
+    }).then(function(message){
+        return sendMessage(message)
+    })
+    .catch(function(err){
+        console.error(err)
+    })
 
-        return callback(null, {})
-    });
+    return callback(null, {});
 };
 
+function renderHTMLFromTXT(inboundMessage, body){
+    
+    return {
+        html: '<pre>' + body +  '</pre>',
+        type: 'page',
+        pathName: inboundMessage.pathName
+    }
+};
+
+function sendMessage(message) {
+
+    if (! snsWrapper.publish(
+        'text.html.generated',
+        message,
+        process.env.RENDER_TOPIC
+    )) {
+        console.error("Failed to send message to : " + process.env.RENDER_TOPIC)
+    }
+};
