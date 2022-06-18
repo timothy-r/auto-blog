@@ -1,14 +1,14 @@
 'use strict';
 
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+// const AWS = require('aws-sdk');
+// const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const snsWrapper = require('lib/snsWrapper');
 
 /**
  * for each new page generated, ensure an idex page exists within each directory
  * directories & sub-dirs are created by adding / chars in object paths
  * strategy - 
- * a router lambda function (this one) to split all object paths into the dirs that need indexes
+ * a router lambda function (this one) to split object paths into the dirs that need indexes
  * another lambda function that generates an index page for a single directory
  * 
  *
