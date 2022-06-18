@@ -18,7 +18,6 @@
   "homepage": "https://github.com/timothy-r/auto-blog#readme",
   "dependencies": {
     "marked": "^4.0.17",
-    "pug": "^3.0.2",
-    "uuid": "^8.3.2"
+    "pug": "^3.0.2"
   }
 }
