@@ -46,6 +46,8 @@ provider:
   environment:
     UPLOAD_BUCKET: ${self:custom.uploadBucket}
     WEB_BUCKET: ${self:custom.webBucket}
+    TARGET_DIRECTORY: 'pages'
+    IMAGE_DIRECTORY: 'images'
 
   stage: dev
   region: eu-west-2
@@ -57,9 +59,6 @@ package:
     - package.json
     - tests/**
     - README.md
-
-#plugins:
-#  - serverless-plugin-webpack
 
 functions:
   upload:
@@ -124,3 +123,11 @@ functions:
     environment:
        DIRECTORY_PAGE_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.directoryPageTopic}" ] ]  }
    
+
+  directoryPage:
+    handler: functions/directoryPage.handler
+    events:
+      - sns:
+          topicName: ${self:custom.directoryPageTopic}
+    environment:
+      RENDER_TOPIC: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.renderTopic}" ] ]  }

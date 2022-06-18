@@ -15,18 +15,22 @@ module.exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(event));
 
-    const message = snsWrapper.getSnsMessage(event);
+    const inboundMessage = snsWrapper.getSnsMessage(event);
 
-    const html = renderTemplate(message.type, message.pathName, message.html, message.fileName)
+    const html = renderTemplate(inboundMessage.type, inboundMessage.pathName, inboundMessage.html, inboundMessage.fileName)
 
     /** don't hard code path to this file */
-    var newName = "pages/" + message.pathName + '.html';
+    var newName = "pages/" + inboundMessage.pathName + '.html';
+
+    var outboundMessage = JSON.parse(JSON.stringify(inboundMessage));
+    outboundMessage['targetFile'] = newName;
 
     // upload the full HTML to the public bucket
     const resultPromise = s3Wrapper.putObject(html, process.env.WEB_BUCKET, newName, 'public-read', "text/html");
 
     resultPromise.then(function(response){
-        return sendMessage(newName)
+        return snsWrapper.publish('page.published', outboundMessage, process.env.INDEX_PAGE_TOPIC);
+        // return sendMessage(newName)
     })
     .catch(function(err){
         console.error(err)

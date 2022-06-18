@@ -16,11 +16,11 @@ const snsWrapper = require('./lib/snsWrapper');
  */
 module.exports.handler = (event, context, callback) => {
 
-    const message = snsWrapper.getSnsMessage(event);
+    const inboundMessage = snsWrapper.getSnsMessage(event);
 
-    console.log(JSON.stringify(message));
+    console.log(JSON.stringify(inboundMessage));
 
-    const directories = message.pathName.split('/')
+    const directories = inboundMessage.targetFile.split('/')
     // remove the object / file name
     directories.pop()
 
@@ -28,30 +28,47 @@ module.exports.handler = (event, context, callback) => {
     // for an object at /pages/top/middle/bottom/thing.png
     // publish /pages , /pages/top , /pages/top/middle , /pages/top/middle/bottom
 
-    dirs = []
-    current = ''
+    // dirs = []
+    var current = ''
+    var promises = []
 
-    for (i = 0; i < directories.length; i++){
+    for (var i = 0; i < directories.length; i++){
         current += '/' + directories[i]
-        dirs.append(current)
+        // dirs.append(current)
+        var promise = snsWrapper.publish(
+            'directory.created',
+            {
+                event: event,
+                dirName: current
+            },
+            process.env.DIRECTORY_PAGE_TOPIC
+        );
+
+        console.log("publishing message for : " + current);
+        promises.push(promise);
     }
 
-    console.log(dirs)
+    
 
-    const responsePromise = snsWrapper.publish(
-        'directory.created',
-        {
-            event: event,
-            dirName: current
-        },
-        process.env.DIRECTORY_PAGE_TOPIC
-    );
+    // const responsePromise = snsWrapper.publish(
+    //     'directory.created',
+    //     {
+    //         event: event,
+    //         dirName: current
+    //     },
+    //     process.env.DIRECTORY_PAGE_TOPIC
+    // );
+    Promise.all(promises)
+        .then((result) => console.log(result))
+        .catch(function(error){
+            console.error(error)
+        })
 
-    responsePromise.then(function(result){
-        console.log("Sent message")
-    }).catch(function(error){
-        console.error(error)
-    })
+    // responsePromise.then(function(result){
+    //     console.log("Sent message")
+    // }).catch(function(error){
+    //     console.error(error)
+    // })
 
     return callback(null, {});
 };
