@@ -20,9 +20,8 @@ module.exports.handler = (event, context, callback) => {
     // get s3 object
     const resultPromise = s3Wrapper.getObjectBodyAsString(inboundMessage.event.bucket.name, inboundMessage.event.object.key);
 
-    resultPromise.then(function(result){
-        console.log(result['Body'] + '')
-        return renderHTMLFromMD(inboundMessage.pathName, result['Body'] + '')
+    resultPromise.then(function(body){
+        return renderHTMLFromMD(inboundMessage.pathName, body)
     }).then(function(message){
         return sendMessage(message)
     })
