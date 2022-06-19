@@ -43,11 +43,4 @@ module.exports.handler = (event, context, callback) => {
 function renderHTMLFromMD(body) {
 
     return marked.parse(body + '');
-
-    // render into html
-    // return {
-    //     html: marked.parse(body + ''),
-    //     type: 'page',
-    //     pathName: path
-    // }
 };

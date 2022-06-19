@@ -67,7 +67,7 @@ functions:
       - s3:
           bucket: ${self:custom.uploadBucket}
           event: s3:ObjectCreated:*
-          existing: false
+          # existing: true
         
     environment:
       # arn:aws:sns:eu-west-2:752934489335:auto-blog-dev-html-page

@@ -1,6 +1,6 @@
 'use strict';
 
-const { S3Client, HeadObjectCommand, GetObjectCommand, CopyObjectCommand, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, HeadObjectCommand, GetObjectCommand, CopyObjectCommand, PutObjectCommand, ListObjectsV2Command } = require("@aws-sdk/client-s3");
 
 /**
  * return the response from the S3 object head request
@@ -10,6 +10,19 @@ module.exports.headObject = async (bucket, key) => {
     const command = new HeadObjectCommand({
         Bucket: bucket,
         Key: key
+    });
+    return executeCommand(command);
+};
+
+/**
+ * Get a bucket listing
+ * @param {string} bucket 
+ * @returns Promise
+ */
+module.exports.listObjects = async (bucket, prefix) => {
+    const command = new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: prefix
     });
     return executeCommand(command);
 };

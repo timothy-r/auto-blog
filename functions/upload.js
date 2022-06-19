@@ -31,7 +31,9 @@ module.exports.handler = (event, context, callback) => {
         return generateMessage(inboundMessage, result)
     })
     .then(function(message){
-        return snsWrapper.publish('object.created', message, message.topic);
+        topic = message.topic;
+        delete message.topic;
+        return snsWrapper.publish('object.created', message, topic);
     })
     .catch(function(err){
         console.error(err)
@@ -48,7 +50,6 @@ module.exports.handler = (event, context, callback) => {
  * @returns 
  */
 function generateMessage(inboundMessage, objectMetadata) {
-    // console.log(inboundMessage.bucket.name + '/' + inboundMessage.object.key + " = " + JSON.stringify(objectMetadata))
     
     const k = inboundMessage.object.key
     const pathName = k.substring(0, k.lastIndexOf('.'))
@@ -70,6 +71,7 @@ function generateMessage(inboundMessage, objectMetadata) {
             fileName: fileName,
             // file extension
             ext: ext,
+            // don't set topic
             topic: topic
         }
     } else {

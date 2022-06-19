@@ -39,10 +39,4 @@ module.exports.handler = (event, context, callback) => {
 
 function renderHTMLFromTXT(body){
     return '<pre>' + body +  '</pre>';
-
-    // return {
-    //     html: '<pre>' + body +  '</pre>',
-    //     type: 'page',
-    //     pathName: path
-    // }
 };
